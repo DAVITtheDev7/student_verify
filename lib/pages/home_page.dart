@@ -10,8 +10,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _nameController = TextEditingController();
-  final _surnameController = TextEditingController();
   final _idController = TextEditingController();
 
   File? _pdfFile;
@@ -25,11 +23,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _verifyStudent() async {
-    if (_nameController.text.trim().isEmpty ||
-        _surnameController.text.trim().isEmpty ||
-        _idController.text.trim().isEmpty) {
+    if (_idController.text.trim().isEmpty) {
       setState(() {
-        _result = "❌ გთხოვთ შეავსოთ ყველა ველი!";
+        _result = "❌ გთხოვთ შეიყვანოთ პირადი ნომერი!";
       });
       return;
     }
@@ -46,8 +42,6 @@ class _HomePageState extends State<HomePage> {
     });
     final result = await StudentVerify.verifyStudentFromPdf(
       localPdf: _pdfFile!,
-      name: _nameController.text.trim(),
-      surname: _surnameController.text.trim(),
       id: _idController.text.trim(),
     );
 
@@ -65,31 +59,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("სტუდენტის ვერიფიკაცია"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("BSU - ვერიფიკაცია"), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "სახელი",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _surnameController,
-                decoration: const InputDecoration(
-                  labelText: "გვარი",
-                  border: OutlineInputBorder(),
-                ),
-              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _idController,
@@ -98,15 +74,36 @@ class _HomePageState extends State<HomePage> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
+                maxLength: 11,
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: _pickPdfFile,
-                icon: const Icon(Icons.picture_as_pdf),
+                icon: Icon(
+                  Icons.picture_as_pdf,
+                  color: _pdfFile == null ? Colors.black : Colors.white,
+                ),
                 label: Text(
-                  _pdfFile == null ? "ატვირთეთ  ცნობა (PDF)" : "ფაილი არჩეულია",
+                  _pdfFile == null ? "ატვირთეთ ცნობა (PDF)" : "ფაილი არჩეულია",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: _pdfFile == null ? Colors.black : Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: _pdfFile == null
+                      ? Colors.white
+                      : Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 3,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
+
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _verifyStudent,

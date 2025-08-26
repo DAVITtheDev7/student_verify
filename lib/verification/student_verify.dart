@@ -33,8 +33,6 @@ class StudentVerify {
 
   static Future<Map<String, dynamic>> verifyStudentFromPdf({
     required File localPdf,
-    required String name,
-    required String surname,
     required String id,
   }) async {
     final localText = await readPdfText(localPdf);
@@ -68,8 +66,6 @@ class StudentVerify {
       }
 
       final conditions = {
-        "სახელი": officialText.contains(name),
-        "გვარი": officialText.contains(surname),
         "პირადი ნომერი": officialText.contains(id),
         "'სტუდენტი'": officialText.contains("სტუდენტი"),
       };
