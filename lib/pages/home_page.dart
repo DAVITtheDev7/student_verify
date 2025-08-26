@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:bsu_verification/verification/student_verify.dart';
 import 'package:flutter/material.dart';
-import 'package:student_verify/verification/student_verify.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,6 +28,16 @@ class _HomePageState extends State<HomePage> {
         _result = "❌ გთხოვთ შეიყვანოთ პირადი ნომერი!";
       });
       return;
+    } else if (_idController.text.trim().length != 11) {
+      setState(() {
+        _result = "❌ პირადი ნომერი უნდა შედგებოდეს 11 ციფრისგან!";
+      });
+      return;
+    } else if (_idController.text.trim().contains(RegExp(r'[^\d]'))) {
+      setState(() {
+        _result = "❌ პირადი ნომერი უნდა შეიცავდეს მხოლოდ ციფრებს!";
+      });
+      return;
     }
 
     if (_pdfFile == null) {
@@ -40,14 +50,36 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _result = "⏳ გთხოვთ დაელოდოთ...";
     });
+
+    final pdfText = await StudentVerify.readPdfText(_pdfFile!);
+    if (pdfText == null) {
+      setState(() {
+        _result = "❌ PDF ფაილის ტექსტის წაკითხვა ვერ მოხერხდა!";
+      });
+      return;
+    }
+    bool validity = StudentVerify.isPdfValid(pdfText);
+
+    if (!validity) {
+      setState(() {
+        _result = "❌ ატვირთული ცნობა არ არის ვალიდური!";
+      });
+      return;
+    }
+
     final result = await StudentVerify.verifyStudentFromPdf(
       localPdf: _pdfFile!,
       id: _idController.text.trim(),
     );
-
     if (result["success"]) {
+      final pdfText = await StudentVerify.readPdfText(_pdfFile!);
+      final data = StudentVerify.extractStudentData(pdfText!);
       setState(() {
-        _result = "✅ ვერიფიკაცია წარმატებულია!";
+        _result =
+            "სახელი: ${data['name'] ?? '-'}\n"
+            "პირადი ნომერი: ${data['id'] ?? '-'}\n"
+            "დაბადების თარიღი: ${data['birthday'] ?? '-'}\n\n"
+            "✅ ვერიფიკაცია წარმატებულია!";
       });
     } else {
       setState(() {
@@ -107,8 +139,25 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _verifyStudent,
-                child: const Text("ვერიფიკაცია"),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50), // full width
+                  backgroundColor: Colors.blueAccent, // primary color
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 4,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                child: const Text(
+                  "ვერიფიკაცია",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
               ),
+
               const SizedBox(height: 20),
               Text(
                 _result,

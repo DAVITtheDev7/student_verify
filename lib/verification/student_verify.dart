@@ -85,4 +85,36 @@ class StudentVerify {
       return {"success": false, "reason": "შეცდომა: $e"};
     }
   }
+
+  static Map<String, String?> extractStudentData(String text) {
+    final nameRegex = RegExp(r"ეძლევა\s([ა-ჰ\s]+)ს\s\(");
+    final nameMatch = nameRegex.firstMatch(text);
+    final name = nameMatch?.group(1)?.trim();
+
+    final idRegex = RegExp(r"პირადი ნომერი:\s(\d+)");
+    final idMatch = idRegex.firstMatch(text);
+    final id = idMatch?.group(1);
+
+    final birthRegex = RegExp(r"დაბადების თარიღი:\s([\d\.]+)");
+    final birthMatch = birthRegex.firstMatch(text);
+    final birthday = birthMatch?.group(1);
+
+    return {"name": name, "id": id, "birthday": birthday};
+  }
+
+  static bool isPdfValid(String text) {
+    final regex = RegExp(r'ცნობა ძალაშია.*?(\d{2}\.\d{2}\.\d{4})-მდე');
+    final match = regex.firstMatch(text);
+    if (match == null) return false;
+
+    final dateParts = match.group(1)!.split('.');
+    final expiryDate = DateTime(
+      int.parse(dateParts[2]), // year
+      int.parse(dateParts[1]), // month
+      int.parse(dateParts[0]), // day
+    );
+
+    final today = DateTime.now();
+    return today.isBefore(expiryDate) || today.isAtSameMomentAs(expiryDate);
+  }
 }
